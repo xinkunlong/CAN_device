@@ -74,7 +74,7 @@ typedef enum
 }can_tx_mail_state_t;
 
 can_tx_mail_state_t SLCAN_get_tx_mail_state( void );
-void SLCAN_pc_cmd_process(char cmd, uint8_t* cmd_buff);
+uint8_t SLCAN_pc_cmd_process(char cmd, uint8_t* cmd_buff);
 slcan_tx_info_to_bus_t * SLCAN_get_tx_info_to_bus( void );
 slcan_tx_info_to_pc_t * SLCAN_get_tx_info_to_pc( void );
 #endif /* INC_SLCAN_H_ */

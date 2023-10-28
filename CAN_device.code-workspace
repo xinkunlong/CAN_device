@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"indentRainbow.colorOnWhiteSpaceOnly": true,
+		"indentRainbow.indicatorStyle": "classic",
+		"terminal.integrated.defaultProfile.windows": "mingw32",
+	}
+}
