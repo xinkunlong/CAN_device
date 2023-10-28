@@ -336,7 +336,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     CAN_RxHeaderTypeDef CAN_RxHeader;
     uint8_t can_data[8];
-    uint8_t info_to_pc[27];
+    uint8_t info_to_pc[30];
     uint8_t head;
     uint8_t data_of_start;
     uint16_t info_len;
@@ -354,14 +354,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         info_to_pc[0] = 'T';
         sprintf((char *)&info_to_pc[1], "%08X", (uint16_t)CAN_RxHeader.ExtId);
         sprintf((char *)&info_to_pc[9], "%d", (uint8_t)dlc);
-        data_of_start = 10u;        
+        data_of_start = 10u;
+
     }
 
     for(uint8_t i = 0u; i < dlc; i++)
     {
         sprintf((char *)&info_to_pc[data_of_start + i*2], "%02X", can_data[i]);
     }
-    info_len = dlc * 2 + 5u;
+    info_len = dlc * 2 + data_of_start;
     info_to_pc[ info_len ] = '\r';
     info_len++;
     head = slcan_tx_info_to_pc_g.head;

@@ -64,7 +64,7 @@ typedef struct
 {
     uint8_t head;
     uint8_t tail;
-    uint8_t can_info[SLCAN_TX_FIFO_NUM][22];/* DATA MAX:8,  CANID : 3, CAN DLC :1, '\r'*/
+    uint8_t can_info[SLCAN_TX_FIFO_NUM][27];/* DATA MAX:8 * 2,  CANID MAX : 8, CAN DLC :1, '\r'*/
 }slcan_tx_info_to_pc_t;
 
 typedef enum
