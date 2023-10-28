@@ -21,14 +21,16 @@
 
 #include "slcan.h"
 
+const char firmware_version[] = {'V','1','0','1','0','\r'};
+
 extern CAN_HandleTypeDef hcan1;
 
 static uint8_t slcan_can_deinit( uint8_t* cmd_buff);
 static uint8_t slcan_can_set_baud_rate( uint8_t* cmd_buff);
 static uint8_t slcan_can_init( uint8_t* cmd_buff);
 static uint8_t slcan_can_get_version( uint8_t* cmd_buff);
-static uint8_t slcan_can_send_data( uint8_t* cmd_buff);
-const char firmware_version[] = {'V','1','0','1','0','\r'};
+static uint8_t slcan_pc_send_normal_frame_to_bus( uint8_t* cmd_buff);
+static uint8_t slcan_pc_send_extended_frame_to_bus( uint8_t* cmd_buff);
 
 static slcan_tx_info_to_bus_t slcan_tx_info_to_bus_g;
 static slcan_tx_info_to_pc_t slcan_tx_info_to_pc_g;
@@ -66,8 +68,12 @@ const slcan_cmd_table_t slcan_cmd_table_c[]=
         .cmd_fun = slcan_can_init,
     },
     {
-        .cmd = 't', /* Transmit data frame command */
-        .cmd_fun = slcan_can_send_data,
+        .cmd = 't', /* Transmit normal data frame command */
+        .cmd_fun = slcan_pc_send_normal_frame_to_bus,
+    },
+    {
+        .cmd = 'T', /* Transmit extended data frame command */
+        .cmd_fun = slcan_pc_send_extended_frame_to_bus,
     },
 };
 
@@ -179,7 +185,7 @@ static uint8_t slcan_can_get_version( uint8_t* cmd_buff)
     return ret;
 }
 
-static uint8_t slcan_can_send_data(uint8_t* cmd_buff)
+static uint8_t slcan_pc_send_normal_frame_to_bus(uint8_t* cmd_buff)
 {
     uint32_t can_id;
     char can_id_str[4];
@@ -196,21 +202,33 @@ static uint8_t slcan_can_send_data(uint8_t* cmd_buff)
     can_id_str[3] = '\0';
     can_id = strtol(can_id_str, NULL, 16);
 
+    if ( can_id > 0x7FFu )
+    {
+        return HAL_ERROR;
+    }
+    
     /* CAN DLC */
     can_dlc_str[0] = (char)cmd_buff[3];
     can_dlc_str[1] = '\0';
     can_dlc = strtol(can_dlc_str, NULL, 16);
 
-    /* CAN Data */
-    if( can_dlc < 9 )
+    if ( can_dlc > 8u )
     {
-        for( uint8_t i = 0u; i < can_dlc; i++ )
-        {
-            can_data_str[0] = (char)cmd_buff[ 4u + i * 2u ];
-            can_data_str[1] = (char)cmd_buff[ 4u + i * 2u + 1u ];
-            can_data_str[2] = '\0';
-            slcan_tx_info_to_bus_g.can_packets[head].can_data[i] = strtol(can_data_str, NULL, 16);
-        }
+        return HAL_ERROR;
+    }
+
+    if( *( cmd_buff + can_dlc * 2u + 4u ) != '\r')
+    {
+        return HAL_ERROR;
+    }
+
+    /* CAN Data */
+    for( uint8_t i = 0u; i < can_dlc; i++ )
+    {
+        can_data_str[0] = (char)cmd_buff[ 4u + i * 2u ];
+        can_data_str[1] = (char)cmd_buff[ 4u + i * 2u + 1u ];
+        can_data_str[2] = '\0';
+        slcan_tx_info_to_bus_g.can_packets[head].can_data[i] = strtol(can_data_str, NULL, 16);
     }
 
     slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.StdId = can_id;
@@ -218,6 +236,60 @@ static uint8_t slcan_can_send_data(uint8_t* cmd_buff)
     slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.RTR = CAN_RTR_DATA;
     slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.IDE = CAN_ID_STD;
 
+    slcan_tx_info_to_bus_g.head = (slcan_tx_info_to_bus_g.head + 1u) % SLCAN_TX_FIFO_NUM;
+    return HAL_OK;
+}
+
+static uint8_t slcan_pc_send_extended_frame_to_bus( uint8_t* cmd_buff)
+{
+    uint32_t can_id;
+    char can_id_str[9];
+
+    char can_dlc_str[2];
+    uint32_t can_dlc;
+
+    char can_data_str[3];
+
+    uint8_t head = slcan_tx_info_to_bus_g.head;
+
+    /* CAN ID */
+    strncpy(can_id_str, (char *)cmd_buff, 8);
+    can_id_str[9] = '\0';
+    can_id = strtol(can_id_str, NULL, 16);
+
+    if ( can_id > 0x1FFFFFFFu )
+    {
+        return HAL_ERROR;
+    }
+    
+    /* CAN DLC */
+    can_dlc_str[0] = (char)cmd_buff[8];
+    can_dlc_str[1] = '\0';
+    can_dlc = strtol(can_dlc_str, NULL, 16);
+
+    if ( can_dlc > 8u )
+    {
+        return HAL_ERROR;
+    }
+
+    if( *( cmd_buff + can_dlc * 2u + 9u ) != '\r')
+    {
+        return HAL_ERROR;
+    }
+
+    /* CAN Data */
+    for( uint8_t i = 0u; i < can_dlc; i++ )
+    {
+        can_data_str[0] = (char)cmd_buff[ 9u + i * 2u ];
+        can_data_str[1] = (char)cmd_buff[ 9u + i * 2u + 1u ];
+        can_data_str[2] = '\0';
+        slcan_tx_info_to_bus_g.can_packets[head].can_data[i] = strtol(can_data_str, NULL, 16);
+    }
+
+    slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.ExtId = can_id;
+    slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.DLC = can_dlc;
+    slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.RTR = CAN_RTR_DATA;
+    slcan_tx_info_to_bus_g.can_packets[head].CAN_TxHeader.IDE = CAN_ID_EXT;
 
     slcan_tx_info_to_bus_g.head = (slcan_tx_info_to_bus_g.head + 1u) % SLCAN_TX_FIFO_NUM;
     return HAL_OK;
@@ -264,8 +336,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     CAN_RxHeaderTypeDef CAN_RxHeader;
     uint8_t can_data[8];
-    uint8_t info_to_pc[22];
+    uint8_t info_to_pc[27];
     uint8_t head;
+    uint8_t data_of_start;
     uint16_t info_len;
     HAL_CAN_GetRxMessage( hcan, CAN_RX_FIFO0, &CAN_RxHeader, can_data );
     uint32_t dlc = CAN_RxHeader.DLC;
@@ -274,18 +347,26 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         info_to_pc[0] = 't';
         sprintf((char *)&info_to_pc[1], "%03X", (uint16_t)CAN_RxHeader.StdId);
         sprintf((char *)&info_to_pc[4], "%d", (uint8_t)dlc);
-
-        for(uint8_t i = 0u; i < dlc; i++)
-        {
-            sprintf((char *)&info_to_pc[5 + i*2], "%02X", can_data[i]);
-        }
-        info_len = dlc * 2 + 5u;
-        info_to_pc[ info_len ] = '\r';
-        info_len++;
-        head = slcan_tx_info_to_pc_g.head;
-        memcpy(slcan_tx_info_to_pc_g.can_info[head],info_to_pc,info_len);
-
-        slcan_tx_info_to_pc_g.head = (slcan_tx_info_to_pc_g.head + 1u) % SLCAN_TX_FIFO_NUM;
+        data_of_start = 5u;
     }
+    else
+    {
+        info_to_pc[0] = 'T';
+        sprintf((char *)&info_to_pc[1], "%08X", (uint16_t)CAN_RxHeader.ExtId);
+        sprintf((char *)&info_to_pc[9], "%d", (uint8_t)dlc);
+        data_of_start = 10u;        
+    }
+
+    for(uint8_t i = 0u; i < dlc; i++)
+    {
+        sprintf((char *)&info_to_pc[data_of_start + i*2], "%02X", can_data[i]);
+    }
+    info_len = dlc * 2 + 5u;
+    info_to_pc[ info_len ] = '\r';
+    info_len++;
+    head = slcan_tx_info_to_pc_g.head;
+    memcpy(slcan_tx_info_to_pc_g.can_info[head],info_to_pc,info_len);
+
+    slcan_tx_info_to_pc_g.head = (slcan_tx_info_to_pc_g.head + 1u) % SLCAN_TX_FIFO_NUM;
 
 }

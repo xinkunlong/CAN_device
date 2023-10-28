@@ -46,7 +46,6 @@ static void cdc_pc_info_to_can_bus( void )
     }
 }
 
-
 static void cdc_can_info_to_pc( void )
 {
     slcan_tx_info_to_pc_t * slcan_tx_info_to_pc_p;
@@ -58,6 +57,7 @@ static void cdc_can_info_to_pc( void )
         slcan_tx_info_to_pc_p->tail = (slcan_tx_info_to_pc_p->tail + 1u) % SLCAN_TX_FIFO_NUM;
     }
 }
+
 /*
  *
  *        PC <----------> slcan<----------> CAN bus
@@ -87,7 +87,7 @@ void CDC_process_pc_slcan(void)
             {
                 resp = '\a';
             }
-            (void)CDC_Transmit_FS(&resp,1);
+            (void)CDC_Transmit_FS(&resp,1u);
         }
 
         usb_rx_info_g.tail = (usb_rx_info_g.tail + 1u) % NUM_RX_BUFS;
