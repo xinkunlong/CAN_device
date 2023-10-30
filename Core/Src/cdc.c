@@ -69,8 +69,6 @@ void CDC_process_pc_slcan(void)
 {
     char cmd;
     uint32_t len;
-    uint8_t ret;
-    uint8_t resp;
     if( usb_rx_info_g.head != usb_rx_info_g.tail )
     {
         cmd = usb_rx_info_g.rx_buff[usb_rx_info_g.tail][0];
@@ -78,16 +76,7 @@ void CDC_process_pc_slcan(void)
 
         if(len > 1u)
         {
-            ret = SLCAN_pc_cmd_process(cmd, &usb_rx_info_g.rx_buff[usb_rx_info_g.tail][1]);
-            if( HAL_OK == ret )
-            {
-                resp = '\r';
-            }
-            else
-            {
-                resp = '\a';
-            }
-            (void)CDC_Transmit_FS(&resp,1u);
+            (void)SLCAN_pc_cmd_process(cmd, &usb_rx_info_g.rx_buff[usb_rx_info_g.tail][1]);
         }
 
         usb_rx_info_g.tail = (usb_rx_info_g.tail + 1u) % NUM_RX_BUFS;
