@@ -51,26 +51,26 @@ typedef struct
 {
     CAN_TxHeaderTypeDef CAN_TxHeader;
     uint8_t can_data[8];
-}can_packets_t;
+}slcan_byte_packets_t;
 
 typedef struct
 {
     uint8_t head;
     uint8_t tail;
-    can_packets_t can_packets[SLCAN_TX_FIFO_NUM];
+    slcan_byte_packets_t can_packets[SLCAN_TX_FIFO_NUM];
 }slcan_tx_info_to_bus_t;
 
 typedef struct
 {
     uint8_t slcan_str[27];
     uint32_t str_len;
-}slcan_tx_info_pkg_t;
+}slcan_str_info_packets_t;
 
 typedef struct
 {
     uint8_t head;
     uint8_t tail;
-    slcan_tx_info_pkg_t info_pkg[SLCAN_TX_FIFO_NUM];/* DATA MAX:8 * 2,  CANID MAX : 8, CAN DLC :1, '\r'*/
+    slcan_str_info_packets_t info_pkg[SLCAN_TX_FIFO_NUM];/* DATA MAX:8 * 2,  CANID MAX : 8, CAN DLC :1, '\r'*/
 }slcan_tx_info_to_pc_t;
 
 typedef enum
