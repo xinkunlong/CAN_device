@@ -366,7 +366,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     info_to_pc[ info_len ] = '\r';
     info_len++;
     head = slcan_tx_info_to_pc_g.head;
-    memcpy(slcan_tx_info_to_pc_g.can_info[head],info_to_pc,info_len);
+    slcan_tx_info_to_pc_g.info_pkg[head].str_len =  info_len;
+    memcpy(slcan_tx_info_to_pc_g.info_pkg[head].slcan_str,info_to_pc,info_len);
 
     slcan_tx_info_to_pc_g.head = (slcan_tx_info_to_pc_g.head + 1u) % SLCAN_TX_FIFO_NUM;
 

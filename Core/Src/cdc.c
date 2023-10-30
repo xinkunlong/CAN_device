@@ -53,7 +53,7 @@ static void cdc_can_info_to_pc( void )
     uint8_t tail = slcan_tx_info_to_pc_p->tail;
     if( tail != slcan_tx_info_to_pc_p->head )
     {
-        (void)CDC_Transmit_FS(slcan_tx_info_to_pc_p->can_info[tail],sizeof(slcan_tx_info_to_pc_p->can_info[tail]));
+        (void)CDC_Transmit_FS(slcan_tx_info_to_pc_p->info_pkg[tail].slcan_str,slcan_tx_info_to_pc_p->info_pkg[tail].str_len);
         slcan_tx_info_to_pc_p->tail = (slcan_tx_info_to_pc_p->tail + 1u) % SLCAN_TX_FIFO_NUM;
     }
 }
