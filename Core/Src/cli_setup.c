@@ -39,7 +39,6 @@ static void writeCharToCli(EmbeddedCli *embeddedCli, char c) {
     extern osMutexId_t uart_mutexHandle;
     osMutexAcquire( uart_mutexHandle, osWaitForever );
     HAL_UART_Transmit(UART_CLI_PERIPH, &c_to_send, 1, 100);
-//    HAL_UART_Transmit_IT(UART_CLI_PERIPH, &c_to_send, 1u);
     osMutexRelease( uart_mutexHandle );
 #else
     HAL_UART_Transmit(UART_CLI_PERIPH, &c_to_send, 1, 100);
@@ -81,9 +80,6 @@ void setupCli() {
 
     // Add all the initial command bindings
     initCliBinding();
-
-    // Init the CLI with blank screen
-    onClearCLI(cli, NULL, NULL);
 
     // CLI has now been initialized, set bool to true to enable interrupts.
     cliIsReady = true;

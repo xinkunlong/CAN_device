@@ -109,7 +109,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
       CDC_process_pc_slcan();
       CDC_process_slcan_bus();
-      embeddedCliProcess( cli  );
+      embeddedCliProcess( cli );
   }
   /* USER CODE END 3 */
 }
