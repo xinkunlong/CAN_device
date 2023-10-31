@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "cdc.h"
+#include "cli_setup.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,13 +48,7 @@ CAN_HandleTypeDef hcan1;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-#ifdef __GNUC__
-/* With GCC, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,7 +96,8 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
-  printf("hello world\r\n");
+  setupCli();
+  EmbeddedCli *cli = getCliPointer();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -113,6 +109,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
       CDC_process_pc_slcan();
       CDC_process_slcan_bus();
+      embeddedCliProcess( cli  );
   }
   /* USER CODE END 3 */
 }
@@ -333,14 +330,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-PUTCHAR_PROTOTYPE
-{
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART3 and Loop until the end of transmission */
-    HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1,0xFFFFFFFF);
-
-  return ch;
-}
 /* USER CODE END 4 */
 
 /**
