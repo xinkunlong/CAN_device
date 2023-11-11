@@ -44,6 +44,9 @@ Core/Src/stm32f7xx_it.c \
 Core/Src/sysmem.c \
 Core/Src/system_stm32f7xx.c \
 Core/Src/syscalls.c \
+Core/Src/cli_binding.c \
+Core/Src/cli_setup.c \
+Core/Src/embedded_cli.c \
 USB_DEVICE/App/usb_device.c \
 USB_DEVICE/App/usbd_desc.c \
 USB_DEVICE/App/usbd_cdc_if.c \

@@ -2,3 +2,4 @@
 /.settings
 /python_can/.venv
 /build
+.idea/workspace.xml
